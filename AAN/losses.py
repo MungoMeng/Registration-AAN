@@ -21,9 +21,6 @@ class Grad():
             y = K.permute_dimensions(y, r)
             dfi = y[1:, ...] - y[:-1, ...]
             
-            # permute back
-            # note: this might not be necessary for this loss specifically,
-            # since the results are just summed over anyway.
             r = [*range(1, d + 1), 0, *range(d + 1, ndims + 2)]
             df[i] = K.permute_dimensions(dfi, r)
         
@@ -52,9 +49,6 @@ class Grad():
             b = K.permute_dimensions(b, r)
             dfi = tf.multiply((y[1:, ...] - y[:-1, ...]),b[:-1, ...])
             
-            # permute back
-            # note: this might not be necessary for this loss specifically,
-            # since the results are just summed over anyway.
             r = [*range(1, d + 1), 0, *range(d + 1, ndims + 2)]
             df[i] = K.permute_dimensions(dfi, r)
         
