@@ -18,7 +18,7 @@ import neuron.layers as nrn_layers
 import losses
 
 
-def AAN(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=None, src_feats=1, tgt_feats=1):
+def AAN_enhanced_DLR(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=None, src_feats=1, tgt_feats=1):
     
     ndims = len(vol_size)
     assert ndims in [1, 2, 3], "ndims should be one of 1, 2, or 3. found: %d" % ndims
@@ -32,7 +32,7 @@ def AAN(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=No
         boundary = Input(shape=[*vol_size, 1])
         
     x_in1 = concatenate([src, tgt, boundary])
-    Appearance_transformation = U_net(x_in1)
+    Appearance_transformation = AAN(x_in1)
     
     Appearance_transformed_src = KL.Add()([Appearance_transformation,src])
     Appearance_transformation_with_boundary = concatenate([Appearance_transformation, boundary])
@@ -53,7 +53,7 @@ def AAN(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=No
     return Model(inputs=[src, tgt, boundary], outputs=[y, flow, Appearance_transformation_with_boundary])
     
 
-def U_net(x_in):
+def AAN(x_in):
     
     ndims = len(x_in.get_shape()) - 2
     assert ndims in [1, 2, 3], "ndims should be one of 1, 2, or 3. found: %d" % ndims
