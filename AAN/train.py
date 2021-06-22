@@ -20,8 +20,6 @@ import datagenerators
 import networks
 import losses
 sys.path.append('./ext/')
-import neuron.callbacks as nrn_gen
-
 
 def train(data_dir,
          fixed_image,
