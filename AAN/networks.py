@@ -47,7 +47,7 @@ def AAN(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=No
     
     y = nrn_layers.SpatialTransformer(interp_method='linear', indexing=indexing)([Appearance_transformed_src, flow])    
 
-    if LBR_model == 'DifVM':
+    if DLR_model == 'DifVM':
         flow = flow_params
     
     return Model(inputs=[src, tgt, boundary], outputs=[y, flow, Appearance_transformation_with_boundary])
