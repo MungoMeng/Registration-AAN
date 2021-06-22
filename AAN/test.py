@@ -19,6 +19,20 @@ from medipy.metrics import dice
 import datagenerators
 
 
+def Get_Num_Neg_Ja(displacement):
+
+    D_y = (displacement[1:,:-1,:-1,:] - displacement[:-1,:-1,:-1,:])
+    D_x = (displacement[:-1,1:,:-1,:] - displacement[:-1,:-1,:-1,:])
+    D_z = (displacement[:-1,:-1,1:,:] - displacement[:-1,:-1,:-1,:])
+
+    D1 = (D_x[...,0]+1)*( (D_y[...,1]+1)*(D_z[...,2]+1) - D_z[...,1]*D_y[...,2])
+    D2 = (D_x[...,1])*(D_y[...,0]*(D_z[...,2]+1) - D_y[...,2]*D_x[...,0])
+    D3 = (D_x[...,2])*(D_y[...,0]*D_z[...,1] - (D_y[...,1]+1)*D_z[...,0])
+    Ja_value = D1-D2+D3
+    
+    return np.sum(Ja_value<0)
+
+
 def test(data_dir,
         fixed_image,
         label,
@@ -26,7 +40,7 @@ def test(data_dir,
         load_model_file,
         DLR_model):
 
-    assert DLR_model in ['VM','FAIM'], 'DLR_model should be one of VM or FAIM, found %s' % LBR_model
+    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM or FAIM, found %s' % LBR_model
     
     # prepare data files
     # inside the folder are npz files with the 'vol' and 'label'.
@@ -57,28 +71,61 @@ def test(data_dir,
         net.load_weights(load_model_file)
 
         # NN transfer model
-        nn_trf_model_nearest = networks.nn_trf(vol_size, interp_method='nearest', indexing='ij')
-        nn_trf_model_linear = networks.nn_trf(vol_size, interp_method='linear', indexing='ij')
+        if DLR_model in ['VM','FAIM']:
+            nn_trf_model_nearest = networks.nn_trf(vol_size, interp_method='nearest', indexing='ij')
+            nn_trf_model_linear = networks.nn_trf(vol_size, interp_method='linear', indexing='ij')
+        else: # DLR_model == 'DifVM'
+            nn_trf_model_nearest = networks.Sample_nn_trf(vol_size, interp_method='nearest', indexing='ij')
+            nn_trf_model_linear = networks.Sample_nn_trf(vol_size, interp_method='linear', indexing='ij')
     
+
     dice_result = [] 
+    Ja_result = []
+    Runtime_result = []
     for test_image in test_vol_names:
         
         X_vol, X_seg, x_boundary = datagenerators.load_example_by_name(test_image, return_boundary=True)
 
         with tf.device(device):
-            pred = net.predict([X_vol, fixing_vol, x_boundary])
-            warp_vol = nn_trf_model_linear.predict([X_vol, pred[1]])[0,...,0]
-            warp_seg = nn_trf_model_nearest.predict([X_seg, pred[1]])[0,...,0]
             
-        vals, _ = dice(warp_seg, fixing_seg, label, nargout=2)
-        dice_result.append(vals)
-
-        print('Dice mean: {:.3f} ({:.3f})'.format(np.mean(vals), np.std(vals)))
+            t = time.time()
+            pred = net.predict([X_vol, fixing_vol, x_boundary])
+            Runtime_vals = time.time() - t
+            
+            if DLR_model in ['VM','FAIM']:
+                warp_vol = nn_trf_model_linear.predict([X_vol, pred[1]])        
+                warp_seg = nn_trf_model_nearest.predict([X_seg, pred[1]])
+                warp_vol = warp_vol[0,...,0]
+                warp_seg = warp_seg[0,...,0]
+                flow = pred[1][0,...]
+            else: # DLR_model == 'DifVM'
+                [warp_vol,flow] = nn_trf_model_linear.predict([X_vol, pred[1]])
+                [warp_seg,flow] = nn_trf_model_nearest.predict([X_seg, pred[1]])
+                warp_vol = warp_vol[0,...,0]
+                warp_seg = warp_seg[0,...,0]
+                flow = flow[0,...]
+        
+        Dice_vals, _ = dice(warp_seg, fixing_seg, label, nargout=2)
+        dice_result.append(Dice_vals)
+        
+        Ja_vals = Get_Num_Neg_Ja(flow)
+        Ja_result.append(Ja_vals)
+        
+        Runtime_result.append(Runtime_vals)
+        
+        print(test_image)
+        print('Dice mean: {:.3f} ({:.3f})'.format(np.mean(Dice_vals), np.std(Dice_vals)))
+        print('Jacobian mean: {:.3f}'.format(np.mean(Ja_vals)))
+        print('Runtime mean: {:.3f}'.format(np.mean(Runtime_vals)))
 
     dice_result = np.array(dice_result)
     print('Average dice mean: {:.3f} ({:.3f})'.format(np.mean(dice_result), np.std(dice_result)))
+    Ja_result = np.array(Ja_result)
+    print('Average Jabobian mean: {:.3f} ({:.3f})'.format(np.mean(Ja_result), np.std(Ja_result)))
+    Runtime_result = np.array(Runtime_result)
+    print('Average Runtime mean: {:.3f} ({:.3f})'.format(np.mean(Runtime_result), np.std(Runtime_result)))
 
-
+    
 if __name__ == "__main__":
     parser = ArgumentParser()
 
@@ -98,7 +145,7 @@ if __name__ == "__main__":
                         help="optional h5 model file to initialize with")
     parser.add_argument("--DLR_model", type=str,
                         dest="DLR_model", default='VM',
-                        help="DLR model: VM or FAIM")
+                        help="DLR model: VM, DifVM, or FAIM")
 
     args = parser.parse_args()
     test(**vars(args))
