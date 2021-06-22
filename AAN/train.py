@@ -45,7 +45,7 @@ def train(data_dir,
     if fixed_image != './':
         fixed_vol = np.load(fixed_image)['vol'][np.newaxis, ..., np.newaxis]
 
-    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM, DifVM or FAIM, found %s' % LBR_model    
+    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM, DifVM or FAIM, found %s' % DLR_model    
     if DLR_model == 'FAIM':
         def FAIM_loss(y_true, y_pred):
             return losses.Grad('l2').loss(y_true, y_pred) + 1e-5*losses.NJ_loss(y_true, y_pred)
