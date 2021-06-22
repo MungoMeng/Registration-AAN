@@ -12,7 +12,7 @@ import tensorflow as tf
 import numpy as np
 from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, CSVLogger
 #from keras.utils import multi_gpu_model 
 
 # project imports
@@ -47,13 +47,18 @@ def train(data_dir,
     if fixed_image != './':
         fixed_vol = np.load(fixed_image)['vol'][np.newaxis, ..., np.newaxis]
 
-    def FAIM_loss(y_true, y_pred):
-        return losses.Grad('l2').loss(y_true, y_pred) + 1e-5*losses.NJ_loss(y_true, y_pred)
-    assert DLR_model in ['VM','FAIM'], 'DLR_model should be one of VM or FAIM, found %s' % LBR_model
+    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM, DifVM or FAIM, found %s' % LBR_model    
     if DLR_model == 'FAIM':
+        def FAIM_loss(y_true, y_pred):
+            return losses.Grad('l2').loss(y_true, y_pred) + 1e-5*losses.NJ_loss(y_true, y_pred)
         reg_loss = FAIM_loss
-    else:
+        reg_param = 0.01
+    elif DLR_model == 'DifVM':
+        reg_loss = losses.KL(prior_lambda=100).kl_loss
+        reg_param = 0.01*0.01
+    else: # DLR_model == 'VM'
         reg_loss = losses.Grad('l2').loss
+        reg_param = 0.01
         
     # prepare model folder
     if not os.path.isdir(model_dir):
@@ -81,9 +86,6 @@ def train(data_dir,
             print('loading', load_model_file)
             model.load_weights(load_model_file)
 
-        # save first iteration
-        model.save(os.path.join(model_dir, '%02d.h5' % initial_epoch))
-
     # data generator
     train_example_gen = datagenerators.example_gen(train_vol_names, batch_size=batch_size, return_boundary=True)
     if fixed_image != './':
@@ -94,22 +96,24 @@ def train(data_dir,
 
     # prepare callbacks
     save_file_name = os.path.join(model_dir, '{epoch:02d}.h5')
+    save_log_name = os.path.join(model_dir, 'log.csv')
 
     # fit generator
     with tf.device(device):
 
-        save_callback = ModelCheckpoint(save_file_name)
+        save_callback = ModelCheckpoint(save_file_name, save_weights_only=True)
+        csv_logger = CSVLogger(save_log_name, append=True)
         
         # compile
         model.compile(optimizer=Adam(lr=lr), 
-                      loss=['mse', reg_loss, losses.Grad('l1').loss_with_boundary],
-                      loss_weights=[1.0, 0.01, AAN_param])
+                      loss=['mse', reg_loss, losses.Grad('l1').Lstructure],
+                      loss_weights=[1.0, reg_param, AAN_param])
             
         # fit
         model.fit_generator(data_gen, 
                             initial_epoch=initial_epoch,
                             epochs=nb_epochs,
-                            callbacks=[save_callback],
+                            callbacks=[save_callback,csv_logger],
                             steps_per_epoch=steps_per_epoch,
                             verbose=1)
 
@@ -149,7 +153,7 @@ if __name__ == "__main__":
                         help="Lstructure lambda parameter")
     parser.add_argument("--DLR_model", type=str,
                         dest="DLR_model", default='VM',
-                        help="DLR model: VM or FAIM")
+                        help="DLR model: VM, DifVM or FAIM")
 
     args = parser.parse_args()
     train(**vars(args))
