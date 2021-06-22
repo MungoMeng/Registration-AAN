@@ -15,8 +15,6 @@ import tensorflow as tf
 
 sys.path.append('./ext/')
 import neuron.layers as nrn_layers
-import neuron.models as nrn_models
-import neuron.utils as nrn_utils
 import losses
 
 
