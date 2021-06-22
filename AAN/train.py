@@ -77,7 +77,7 @@ def train(data_dir,
 
     # prepare the model
     with tf.device(device):
-        model = networks.AAN(vol_size, DLR_model)
+        model = networks.AAN_enhanced_DLR(vol_size, DLR_model)
 
         # load initial weights
         if load_model_file != './':
