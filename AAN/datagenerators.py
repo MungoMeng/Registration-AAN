@@ -7,7 +7,7 @@ def gen_atlas(gen, atlas_vol_bs, batch_size=1):
     zeros = np.zeros((batch_size, *volshape, len(volshape)))
     while True:
         X = next(gen)
-        yield ([X[0], atlas_vol_bs, X[1]], [atlas_vol_bs, zeros, zeros[...,:-1]])
+        yield ([X[0], atlas_vol_bs, X[1]], [atlas_vol_bs, zeros, zeros])
         
         
 def gen_s2s(gen, batch_size=1):
@@ -20,7 +20,7 @@ def gen_s2s(gen, batch_size=1):
             volshape = X1[0].shape[1:-1]
             zeros = np.zeros((batch_size, *volshape, len(volshape)))
             
-        yield ([X1[0], X2[0], X1[1]], [X2[0], zeros, zeros[...,:-1]])
+        yield ([X1[0], X2[0], X1[1]], [X2[0], zeros, zeros])
         
 
 def example_gen(vol_names, batch_size=1, return_segs=False, return_boundary=False):
