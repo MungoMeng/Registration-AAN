@@ -83,6 +83,7 @@ def test(data_dir,
     Ja_result = []
     Runtime_result = []
     for test_image in test_vol_names:
+        print(test_image)
         
         X_vol, X_seg, x_boundary = datagenerators.load_example_by_name(test_image, return_boundary=True)
 
@@ -107,15 +108,13 @@ def test(data_dir,
         
         Dice_vals, _ = dice(warp_seg, fixing_seg, label, nargout=2)
         dice_result.append(Dice_vals)
+        print('Dice mean: {:.3f} ({:.3f})'.format(np.mean(Dice_vals), np.std(Dice_vals)))
         
         Ja_vals = Get_Num_Neg_Ja(flow)
         Ja_result.append(Ja_vals)
+        print('Jacobian mean: {:.3f}'.format(np.mean(Ja_vals)))
         
         Runtime_result.append(Runtime_vals)
-        
-        print(test_image)
-        print('Dice mean: {:.3f} ({:.3f})'.format(np.mean(Dice_vals), np.std(Dice_vals)))
-        print('Jacobian mean: {:.3f}'.format(np.mean(Ja_vals)))
         print('Runtime mean: {:.3f}'.format(np.mean(Runtime_vals)))
 
     dice_result = np.array(dice_result)
