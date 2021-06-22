@@ -67,7 +67,7 @@ def test(data_dir,
     
     # load weights of model
     with tf.device(device):
-        net = networks.AAN(vol_size, DLR_model)
+        net = networks.AAN_enhanced_DLR(vol_size, DLR_model)
         net.load_weights(load_model_file)
 
         # NN transfer model
