@@ -34,7 +34,7 @@ def AAN_enhanced_DLR(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None
     x_in1 = concatenate([src, tgt, boundary])
     Appearance_transformation = AAN(x_in1)
     
-    Appearance_transformed_src = KL.Add()([Appearance_transformation,src])
+    Appearance_transformed_src = add([Appearance_transformation,src])
     Appearance_transformation_with_boundary = concatenate([Appearance_transformation, boundary])
     
     x_in2 = concatenate([Appearance_transformed_src, tgt])    
