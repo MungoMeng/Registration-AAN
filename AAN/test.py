@@ -43,7 +43,6 @@ def test(data_dir,
     assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM or FAIM, found %s' % LBR_model
     
     # prepare data files
-    # inside the folder are npz files with the 'vol' and 'label'.
     test_vol_names = glob.glob(os.path.join(data_dir, '*.npz'))
     assert len(test_vol_names) > 0, "Could not find any testing data"
     
