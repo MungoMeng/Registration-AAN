@@ -35,7 +35,6 @@ def train(data_dir,
          DLR_model):
  
     # prepare data files
-    # inside the folder are npz files with the 'vol' and 'label'.
     train_vol_names = glob.glob(os.path.join(data_dir, '*.npz'))
     random.shuffle(train_vol_names)  # shuffle volume list_
     assert len(train_vol_names) > 0, "Could not find any training data"
