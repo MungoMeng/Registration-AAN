@@ -34,9 +34,9 @@ class Grad():
             df = [tf.reduce_mean(f * f) for f in self._diffs(y_pred)]
         return tf.add_n(df) / len(df)
     
-    def _diffs_with_boundary(self, y):
-        b = 1-y[...,1][...,np.newaxis]
-        y = y[...,0][...,np.newaxis]
+    def _diffs_with_edge(self, y):
+        e = 1-y[...,1:2]
+        y = y[...,0:1]
         vol_shape = y.get_shape().as_list()[1:-1]
         ndims = len(vol_shape)
 
@@ -46,8 +46,8 @@ class Grad():
             # permute dimensions to put the ith dimension first
             r = [d, *range(d), *range(d + 1, ndims + 2)]
             y = K.permute_dimensions(y, r)
-            b = K.permute_dimensions(b, r)
-            dfi = tf.multiply((y[1:, ...] - y[:-1, ...]),b[:-1, ...])
+            e = K.permute_dimensions(e, r)
+            dfi = tf.multiply((y[1:, ...] - y[:-1, ...]),e[:-1, ...])
             
             r = [*range(1, d + 1), 0, *range(d + 1, ndims + 2)]
             df[i] = K.permute_dimensions(dfi, r)
@@ -56,10 +56,10 @@ class Grad():
     
     def Lstructure(self, _, y_pred):
         if self.penalty == 'l1':
-            df = [tf.reduce_mean(tf.abs(f)) for f in self._diffs_with_boundary(y_pred)] 
+            df = [tf.reduce_mean(tf.abs(f)) for f in self._diffs_with_edge(y_pred)] 
         else:
             assert self.penalty == 'l2', 'penalty can only be l1 or l2. Got: %s' % self.penalty
-            df = [tf.reduce_mean(f * f) for f in self._diffs_with_boundary(y_pred)]
+            df = [tf.reduce_mean(f * f) for f in self._diffs_with_edge(y_pred)]
         return tf.add_n(df) / len(df)
 
 
