@@ -18,24 +18,18 @@ import neuron.layers as nrn_layers
 import losses
 
 
-def AAN_enhanced_DLR(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None, boundary=None, src_feats=1, tgt_feats=1):
-    
-    ndims = len(vol_size)
-    assert ndims in [1, 2, 3], "ndims should be one of 1, 2, or 3. found: %d" % ndims
+def AAN_enhanced_DLR(vol_size, DLR_model='VM', indexing='ij'):
     
     # inputs
-    if src is None:
-        src = Input(shape=[*vol_size, src_feats])
-    if tgt is None:
-        tgt = Input(shape=[*vol_size, tgt_feats])
-    if boundary is None:
-        boundary = Input(shape=[*vol_size, 1])
+    src = Input(shape=[*vol_size, 1])
+    tgt = Input(shape=[*vol_size, 1])
+    edge = Input(shape=[*vol_size, 1])
         
-    x_in1 = concatenate([src, tgt, boundary])
+    x_in1 = concatenate([src, tgt, edge])
     Appearance_transformation = AAN(x_in1)
     
     Appearance_transformed_src = add([Appearance_transformation,src])
-    Appearance_transformation_with_boundary = concatenate([Appearance_transformation, boundary])
+    Appearance_transformation_with_edge = concatenate([Appearance_transformation, edge], name='Appearance_transformation')
     
     x_in2 = concatenate([Appearance_transformed_src, tgt])    
     if DLR_model == 'VM':
@@ -50,7 +44,7 @@ def AAN_enhanced_DLR(vol_size, DLR_model='VM', indexing='ij', src=None, tgt=None
     if DLR_model == 'DifVM':
         flow = flow_params
     
-    return Model(inputs=[src, tgt, boundary], outputs=[y, flow, Appearance_transformation_with_boundary])
+    return Model(inputs=[src, tgt, edge], outputs=[y, flow, Appearance_transformation_with_edge])
     
 
 def AAN(x_in):
@@ -190,7 +184,7 @@ def DifVM(x_in, model='vm2', full_size=False, int_steps=7, vel_resize=1/2):
                             kernel_initializer=RandomNormal(mean=0.0, stddev=1e-10),
                             bias_initializer=keras.initializers.Constant(value=-10),
                             name='log_sigma')(x)
-    flow_params = concatenate([flow_mean, flow_log_sigma])
+    flow_params = concatenate([flow_mean, flow_log_sigma], name='flow_params')
 
     # velocity sample
     flow = Sample(name="z_sample")([flow_mean, flow_log_sigma])
@@ -344,25 +338,7 @@ class Sample(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0]
 
-    
-class Negate(Layer):
-    """ 
-    Keras Layer: negative of the input
-    """
 
-    def __init__(self, **kwargs):
-        super(Negate, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        super(Negate, self).build(input_shape)  # Be sure to call this somewhere!
-
-    def call(self, x):
-        return -x
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
-    
 class Rescale(Layer):
     """ 
     Keras layer: rescale data by fixed factor
@@ -381,14 +357,3 @@ class Rescale(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape
 
-    
-class RescaleDouble(Rescale):
-    def __init__(self, **kwargs):
-        self.resize = 2
-        super(RescaleDouble, self).__init__(self.resize, **kwargs)
-
-        
-class ResizeDouble(nrn_layers.Resize):
-    def __init__(self, **kwargs):
-        self.zoom_factor = 2
-        super(ResizeDouble, self).__init__(self.zoom_factor, **kwargs)
