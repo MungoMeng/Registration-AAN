@@ -40,7 +40,7 @@ def test(data_dir,
         load_model_file,
         DLR_model):
 
-    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM or FAIM, found %s' % LBR_model
+    assert DLR_model in ['VM','DifVM','FAIM'], 'DLR_model should be one of VM, DifVM or FAIM, found %s' % LBR_model
     
     # prepare data files
     test_vol_names = glob.glob(os.path.join(data_dir, '*.npz'))
