@@ -23,7 +23,7 @@ def gen_s2s(gen, batch_size=1):
         yield ([X1[0], X2[0], X1[1]], [X2[0], zeros, zeros])
         
 
-def example_gen(vol_names, batch_size=1, return_segs=False, return_boundary=False):
+def example_gen(vol_names, batch_size=1, return_segs=False, return_edge=False):
     
     while True:
         idxes = np.random.randint(len(vol_names), size=batch_size)
@@ -53,13 +53,13 @@ def example_gen(vol_names, batch_size=1, return_segs=False, return_boundary=Fals
                 else:
                     return_vals.append(X_data[0])
         
-            # also return boundaey
-            if return_boundary:
+            # also return edge
+            if return_edge:
                 X_data = []
                 for idx in idxes:
-                    X_boundary = load_volfile(vol_names[idx], np_var='boundary')
-                    X_boundary = X_boundary[np.newaxis, ..., np.newaxis]
-                    X_data.append(X_boundary)
+                    X_edge = load_volfile(vol_names[idx], np_var='edge')
+                    X_edge = X_edge[np.newaxis, ..., np.newaxis]
+                    X_data.append(X_edge)
             
                 if batch_size > 1:
                     return_vals.append(np.concatenate(X_data, 0))
@@ -73,7 +73,7 @@ def example_gen(vol_names, batch_size=1, return_segs=False, return_boundary=Fals
             continue
 
 
-def load_example_by_name(vol_name, return_boundary=False):
+def load_example_by_name(vol_name, return_edge=False):
 
     X = load_volfile(vol_name, 'vol')
     X = X[np.newaxis, ..., np.newaxis]
@@ -85,11 +85,11 @@ def load_example_by_name(vol_name, return_boundary=False):
 
     return_vals.append(X_seg)
     
-    if return_boundary == True:
-        X_boundary = load_volfile(vol_name, np_var='boundary')
-        X_boundary = X_boundary[np.newaxis, ..., np.newaxis]
+    if return_edge == True:
+        X_edge = load_volfile(vol_name, np_var='edge')
+        X_edge = X_edge[np.newaxis, ..., np.newaxis]
         
-        return_vals.append(X_boundary)
+        return_vals.append(X_edge)
 
     return tuple(return_vals)
 
