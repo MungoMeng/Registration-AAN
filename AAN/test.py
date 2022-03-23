@@ -84,12 +84,12 @@ def test(data_dir,
     for test_image in test_vol_names:
         print(test_image)
         
-        X_vol, X_seg, x_boundary = datagenerators.load_example_by_name(test_image, return_boundary=True)
+        X_vol, X_seg, X_edge = datagenerators.load_example_by_name(test_image, return_edge=True)
 
         with tf.device(device):
             
             t = time.time()
-            pred = net.predict([X_vol, fixing_vol, x_boundary])
+            pred = net.predict([X_vol, fixing_vol, X_edge])
             Runtime_vals = time.time() - t
             
             if DLR_model in ['VM','FAIM']:
