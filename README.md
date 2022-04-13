@@ -5,4 +5,6 @@ Deformable image registration is fundamental for many medical image analyses. A 
 ![workflow](https://github.com/MungoMeng/Image-Registration-AAN/blob/master/Figure/workflow.png)
 
 ## Publication
-**Coming soon.**
+If this repository helps your work, please kindly cite our paper as follows:
+
+* **Mingyuan Meng, Lei Bi, Michael Fulham, David Dagan Feng, Jinman Kim, "Enhancing Medical Image Registration via Appearance Adjustment Networks," arXiv:2103.05213. [[arXiv](https://arxiv.org/abs/2103.05213)]**
