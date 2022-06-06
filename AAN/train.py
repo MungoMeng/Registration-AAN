@@ -63,10 +63,7 @@ def train(data_dir,
 
     # device handling
     if 'gpu' in device:
-        if '0' in device:
-            device = '/gpu:0'
-        if '1' in device:
-            device = '/gpu:1'
+        device = '/gpu:0'
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         config.allow_soft_placement = True
@@ -126,8 +123,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str,
                         dest="model_dir", default='./models/',
                         help="models folder")
-    parser.add_argument("--device", type=str, default='gpu0',
-                        dest="device", help="cpu or gpuN")
+    parser.add_argument("--device", type=str, default='gpu',
+                        dest="device", help="cpu or gpu")
     parser.add_argument("--lr", type=float,
                         dest="lr", default=1e-4, help="learning rate")
     parser.add_argument("--epochs", type=int,
