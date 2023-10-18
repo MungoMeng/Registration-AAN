@@ -89,7 +89,7 @@ def test(data_dir,
         with tf.device(device):
             
             t = time.time()
-            pred = net.predict([X_vol, fixing_vol, X_edge])
+            pred = net.predict([X_vol, fixed_vol, X_edge])
             Runtime_vals = time.time() - t
             
             if DLR_model in ['VM','FAIM']:
@@ -105,7 +105,7 @@ def test(data_dir,
                 warp_seg = warp_seg[0,...,0]
                 flow = flow[0,...]
         
-        Dice_vals, _ = dice(warp_seg, fixing_seg, label, nargout=2)
+        Dice_vals, _ = dice(warp_seg, fixed_seg, label, nargout=2)
         dice_result.append(Dice_vals)
         print('Dice mean: {:.3f} ({:.3f})'.format(np.mean(Dice_vals), np.std(Dice_vals)))
         
