@@ -84,7 +84,7 @@ def train(data_dir,
     train_example_gen = datagenerators.example_gen(train_vol_names, batch_size=batch_size, return_edge=True)
     if fixed_image != './':
         fixed_vol_bs = np.repeat(fixed_vol, batch_size, axis=0)
-        data_gen = datagenerators.gen_atlas(train_example_gen, fixing_vol_bs, batch_size=batch_size)
+        data_gen = datagenerators.gen_atlas(train_example_gen, fixed_vol_bs, batch_size=batch_size)
     else:
         data_gen = datagenerators.gen_s2s(train_example_gen, batch_size=batch_size)
 
